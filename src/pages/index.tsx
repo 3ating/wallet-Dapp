@@ -1,5 +1,3 @@
-import { useContext } from 'react';
-import { ThemeContext } from '../contexts/ThemeContext';
 import Wallet from './wallet';
 import styled from 'styled-components';
 
