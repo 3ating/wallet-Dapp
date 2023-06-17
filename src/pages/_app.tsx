@@ -9,6 +9,7 @@ import { ReactNode, useContext } from 'react';
 function MyApp({ Component, pageProps }: AppProps) {
     return (
         <ThemeProvider>
+            <title>Wallet</title>
             <ThemeController>
                 <Component {...pageProps} />
             </ThemeController>
