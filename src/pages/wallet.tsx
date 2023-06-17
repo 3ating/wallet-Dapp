@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
 import { useEffect, useState } from 'react';
+import { tokenABI } from '../utils/tokenABI';
 import styled from 'styled-components';
 
 const Container = styled.div`
@@ -21,7 +22,7 @@ const InfoWrap = styled.div`
 
 const Title = styled.p`
     color: #000;
-    font-size: 30px;
+    font-size: 28px;
     font-weight: 600;
     letter-spacing: 1px;
 `;
@@ -81,9 +82,16 @@ const To = styled(From)`
     margin-top: 20px;
 `;
 
+const TokenBalance = styled(Balance)``;
+
 const Wallet = () => {
+    const USDC_ADDRESS = process.env.NEXT_PUBLIC_USDC_ADDRESS || '';
+    const USDT_ADDRESS = process.env.NEXT_PUBLIC_USDT_ADDRESS || '';
+
     const [address, setAddress] = useState<string>('');
-    const [balance, setBalance] = useState<string>('');
+    const [ethBalance, setEthBalance] = useState<string>('');
+    const [usdcBalance, setUsdcBalance] = useState<string>('');
+    const [usdtBalance, setUsdtBalance] = useState<string>('');
     const [transactions, setTransactions] = useState<ethers.TransactionResponse[]>([]);
 
     useEffect(() => {
@@ -101,12 +109,21 @@ const Wallet = () => {
             const displayedAddress = `${userAddress.slice(0, 6)}...${userAddress.slice(-7)}`;
 
             setAddress(displayedAddress);
-            setBalance(parsedBalance);
+            setEthBalance(parsedBalance);
 
-            const hashes = [
-                '0x1eb6aab282d701d3d2eeb762bd426df625767e68ebf9c00b484905be1343304e',
-                '0xf134054861dccf1f211e6fd92808475b2fb290489a4e41bc008260d8cc58b9f9',
-            ];
+            const usdcContract = new ethers.Contract(USDC_ADDRESS, tokenABI, provider);
+            const usdtContract = new ethers.Contract(USDT_ADDRESS, tokenABI, provider);
+
+            const rawUsdcBalance = await usdcContract.balanceOf(userAddress);
+            const parsedUsdcBalance = ethers.formatUnits(rawUsdcBalance, 6);
+
+            const rawUsdtBalance = await usdtContract.balanceOf(userAddress);
+            const parsedUsdtBalance = ethers.formatUnits(rawUsdtBalance, 6);
+
+            setUsdcBalance(parsedUsdcBalance);
+            setUsdtBalance(parsedUsdtBalance);
+
+            const hashes = [process.env.NEXT_PUBLIC_TX_HASH1 || '', process.env.NEXT_PUBLIC_TX_HASH2 || ''];
 
             const transactionsData = (await Promise.all(hashes.map((hash) => provider.getTransaction(hash)))).filter(
                 (tx): tx is ethers.TransactionResponse => tx !== null
@@ -128,7 +145,7 @@ const Wallet = () => {
                 </InfoWrap>
                 <InfoWrap>
                     <Balance>ETH Balance</Balance>
-                    <Balance>{balance} ETH</Balance>
+                    <Balance>{ethBalance} ETH</Balance>
                 </InfoWrap>
             </Container>
             <Title>Transactions</Title>
@@ -150,6 +167,17 @@ const Wallet = () => {
                         </Transaction>
                     </InfoWrap>
                 ))}
+            </Container>
+            <Title>Token Holdings</Title>
+            <Container>
+                <InfoWrap>
+                    <TokenBalance>USDC Balance</TokenBalance>
+                    <TokenBalance>{usdcBalance} USDC</TokenBalance>
+                </InfoWrap>
+                <InfoWrap>
+                    <TokenBalance>USDT Balance</TokenBalance>
+                    <TokenBalance>{usdtBalance} USDT</TokenBalance>
+                </InfoWrap>
             </Container>
         </div>
     );
