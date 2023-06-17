@@ -27,18 +27,13 @@ To set up the project, please follow the instructions below:
 1.  #### Clone the repository
 
         ```
-
-    git clone https://github.com/3ating/wallet-dapp.git
-
-    ```
-
-    ```
+        git clone https://github.com/3ating/wallet-dapp.git
+        ```
 
 2.  #### Navigate to the project folder:
 
     ```
     cd wallet-dapp
-
     ```
 
 3.  #### Install dependencies:
