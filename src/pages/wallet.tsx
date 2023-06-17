@@ -99,96 +99,103 @@ const Wallet = () => {
     const [usdtBalance, setUsdtBalance] = useState<string>('');
     const [transactions, setTransactions] = useState<ethers.TransactionResponse[]>([]);
 
+    const fetchEthBalance = async (provider: ethers.JsonRpcProvider) => {
+        const rawBalance = await provider.getBalance(ETHEREUM_ADDRESS);
+        const parsedBalance = ethers.formatEther(rawBalance);
+        const displayedAddress = `${ETHEREUM_ADDRESS.slice(0, 6)}...${ETHEREUM_ADDRESS.slice(-7)}`;
+        setAddress(displayedAddress);
+        setEthBalance(parsedBalance);
+    };
+    const fetchTokenBalances = async (provider: ethers.JsonRpcProvider) => {
+        const usdcContract = new ethers.Contract(USDC_ADDRESS, tokenABI, provider);
+        const usdtContract = new ethers.Contract(USDT_ADDRESS, tokenABI, provider);
+        const [rawUsdcBalance, rawUsdtBalance] = await Promise.all([
+            usdcContract.balanceOf(ETHEREUM_ADDRESS),
+            usdtContract.balanceOf(ETHEREUM_ADDRESS),
+        ]);
+
+        const parsedUsdcBalance = ethers.formatUnits(rawUsdcBalance, 6);
+        const parsedUsdtBalance = ethers.formatUnits(rawUsdtBalance, 6);
+
+        setUsdcBalance(parsedUsdcBalance);
+        setUsdtBalance(parsedUsdtBalance);
+    };
+
+    const fetchTransactions = async (provider: ethers.JsonRpcProvider, hashes: string[]) => {
+        const transactionsData = (
+            await Promise.all(hashes.map((hash: string) => provider.getTransaction(hash)))
+        ).filter((tx): tx is ethers.TransactionResponse => tx !== null);
+        setTransactions(transactionsData);
+    };
+
+    const fetchBalanceAndTransactions = async () => {
+        const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_ALCHEMY_API);
+        const balancePromise = fetchEthBalance(provider);
+        const tokenBalancesPromise = fetchTokenBalances(provider);
+        const hashes = [TX_HASH1, TX_HASH2];
+        const transactionsPromise = fetchTransactions(provider, hashes);
+
+        await Promise.all([balancePromise, tokenBalancesPromise, transactionsPromise]);
+    };
+
     useEffect(() => {
-        const fetchBalanceAndTransactions = async () => {
-            const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_ALCHEMY_API);
-            const rawBalance = await provider.getBalance(ETHEREUM_ADDRESS);
-            const parsedBalance = ethers.formatEther(rawBalance);
-            const displayedAddress = `${ETHEREUM_ADDRESS.slice(0, 6)}...${ETHEREUM_ADDRESS.slice(-7)}`;
-
-            setAddress(displayedAddress);
-            setEthBalance(parsedBalance);
-
-            const usdcContract = new ethers.Contract(USDC_ADDRESS, tokenABI, provider);
-            const usdtContract = new ethers.Contract(USDT_ADDRESS, tokenABI, provider);
-
-            const rawUsdcBalance = await usdcContract.balanceOf(ETHEREUM_ADDRESS);
-            const parsedUsdcBalance = ethers.formatUnits(rawUsdcBalance, 6);
-
-            const rawUsdtBalance = await usdtContract.balanceOf(ETHEREUM_ADDRESS);
-            const parsedUsdtBalance = ethers.formatUnits(rawUsdtBalance, 6);
-
-            setUsdcBalance(parsedUsdcBalance);
-            setUsdtBalance(parsedUsdtBalance);
-
-            const hashes = [TX_HASH1, TX_HASH2];
-
-            const transactionsData = (await Promise.all(hashes.map((hash) => provider.getTransaction(hash)))).filter(
-                (tx): tx is ethers.TransactionResponse => tx !== null
-            );
-
-            setTransactions(transactionsData);
-        };
-
         fetchBalanceAndTransactions();
     }, []);
 
     return (
         <div>
-            <>
-                <Title>Account Info</Title>
-                <Container>
-                    <InfoWrap>
-                        <Address>Account Address</Address>
-                        {address === '' ? <Loader /> : <Address>{address}</Address>}
+            <Title>Account Info</Title>
+            <Container>
+                <InfoWrap>
+                    <Address>Account Address</Address>
+                    {!address ? <Loader /> : <Address>{address}</Address>}
+                </InfoWrap>
+                <InfoWrap>
+                    <Balance>ETH Balance</Balance>
+                    {!ethBalance ? <Loader /> : <Balance>{ethBalance} ETH</Balance>}
+                </InfoWrap>
+            </Container>
+            <Title>Transactions</Title>
+            <Container>
+                <TransactionTextWrapper>
+                    <TxHash>TX Hash</TxHash>
+                    <Block>Block</Block>
+                </TransactionTextWrapper>
+                {transactions.length == 0 && (
+                    <>
+                        <TransLoadingInfoWrap>
+                            <Loader />
+                        </TransLoadingInfoWrap>
+                        <TransLoadingInfoWrap>
+                            <Loader />
+                        </TransLoadingInfoWrap>
+                    </>
+                )}
+                {transactions.map((tx, i) => (
+                    <InfoWrap key={i}>
+                        <Transaction>
+                            <HashBlockWrapper>
+                                <Hash>{`${tx.hash.slice(0, 6)}...${tx.hash.slice(-7)}`}</Hash>
+                                <BlockNumber>{tx.blockNumber}</BlockNumber>
+                            </HashBlockWrapper>
+                            <TransactionLine />
+                            <From>from: {tx.from}</From>
+                            <To>to: {tx.to}</To>
+                        </Transaction>
                     </InfoWrap>
-                    <InfoWrap>
-                        <Balance>ETH Balance</Balance>
-                        {ethBalance === '' ? <Loader /> : <Balance>{ethBalance} ETH</Balance>}
-                    </InfoWrap>
-                </Container>
-                <Title>Transactions</Title>
-                <Container>
-                    <TransactionTextWrapper>
-                        <TxHash>TX Hash</TxHash>
-                        <Block>Block</Block>
-                    </TransactionTextWrapper>
-                    {transactions.length == 0 && (
-                        <>
-                            <TransLoadingInfoWrap>
-                                <Loader />
-                            </TransLoadingInfoWrap>
-                            <TransLoadingInfoWrap>
-                                <Loader />
-                            </TransLoadingInfoWrap>
-                        </>
-                    )}
-                    {transactions.map((tx, i) => (
-                        <InfoWrap key={i}>
-                            <Transaction>
-                                <HashBlockWrapper>
-                                    <Hash>{`${tx.hash.slice(0, 6)}...${tx.hash.slice(-7)}`}</Hash>
-                                    <BlockNumber>{tx.blockNumber}</BlockNumber>
-                                </HashBlockWrapper>
-                                <TransactionLine />
-                                <From>from: {tx.from}</From>
-                                <To>to: {tx.to}</To>
-                            </Transaction>
-                        </InfoWrap>
-                    ))}
-                </Container>
-                <Title>Token Holdings</Title>
-                <Container>
-                    <InfoWrap>
-                        <TokenBalance>USDC Balance</TokenBalance>
-                        {usdcBalance === '' ? <Loader /> : <TokenBalance>{usdcBalance} USDC</TokenBalance>}
-                    </InfoWrap>
-                    <InfoWrap>
-                        <TokenBalance>USDT Balance</TokenBalance>
-                        {usdtBalance === '' ? <Loader /> : <TokenBalance>{usdtBalance} USDT</TokenBalance>}
-                    </InfoWrap>
-                </Container>
-            </>
+                ))}
+            </Container>
+            <Title>Token Holdings</Title>
+            <Container>
+                <InfoWrap>
+                    <TokenBalance>USDC Balance</TokenBalance>
+                    {!usdcBalance ? <Loader /> : <TokenBalance>{usdcBalance} USDC</TokenBalance>}
+                </InfoWrap>
+                <InfoWrap>
+                    <TokenBalance>USDT Balance</TokenBalance>
+                    {!usdtBalance ? <Loader /> : <TokenBalance>{usdtBalance} USDT</TokenBalance>}
+                </InfoWrap>
+            </Container>
         </div>
     );
 };
