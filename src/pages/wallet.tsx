@@ -23,6 +23,11 @@ const InfoWrap = styled.div`
     padding: 0 5%;
 `;
 
+const TransLoadingInfoWrap = styled(InfoWrap)`
+    justify-content: center;
+    height: 231px;
+`;
+
 const Title = styled.p`
     color: #000;
     font-size: 28px;
@@ -30,7 +35,7 @@ const Title = styled.p`
     letter-spacing: 1px;
 `;
 
-const Address = styled.p`
+const Address = styled.div`
     font-size: 22px;
     margin: 40px 0;
     color: #000;
@@ -148,6 +153,16 @@ const Wallet = () => {
                         <TxHash>TX Hash</TxHash>
                         <Block>Block</Block>
                     </TransactionTextWrapper>
+                    {transactions.length == 0 && (
+                        <>
+                            <TransLoadingInfoWrap>
+                                <Loader />
+                            </TransLoadingInfoWrap>
+                            <TransLoadingInfoWrap>
+                                <Loader />
+                            </TransLoadingInfoWrap>
+                        </>
+                    )}
                     {transactions.map((tx, i) => (
                         <InfoWrap key={i}>
                             <Transaction>
