@@ -4,8 +4,8 @@ import styled from 'styled-components';
 const inter = Inter({ subsets: ['latin'] });
 
 const Container = styled.div`
-    width: 100%;
-    padding: 50px 350px;
+    min-width: 100%;
+    padding: 50px 25%;
     box-sizing: border-box;
 `;
 
