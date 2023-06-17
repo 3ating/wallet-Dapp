@@ -5,6 +5,7 @@ import { ETHEREUM_ADDRESS, USDC_ADDRESS, USDT_ADDRESS, TX_HASH1, TX_HASH2 } from
 import styled from 'styled-components';
 import Loader from '../components/Loader';
 import ThemeBtn from '@/components/ThemeBtn';
+import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 
 const Container = styled.div`
     display: flex;
@@ -52,7 +53,20 @@ const Address = styled.div`
     letter-spacing: 1px;
 `;
 
-const Balance = styled(Address)``;
+const Balance = styled(Address)`
+    display: flex;
+    align-items: center;
+`;
+
+const EyeIcon = styled(AiOutlineEye)`
+    margin-left: 5px;
+    cursor: pointer;
+`;
+
+const EyeInvisibleIcon = styled(AiOutlineEyeInvisible)`
+    margin-left: 5px;
+    cursor: pointer;
+`;
 
 const TransactionTextWrapper = styled.div`
     display: flex;
@@ -108,6 +122,9 @@ const Wallet = () => {
     const [usdcBalance, setUsdcBalance] = useState<string>('');
     const [usdtBalance, setUsdtBalance] = useState<string>('');
     const [transactions, setTransactions] = useState<ethers.TransactionResponse[]>([]);
+    const [showEthBalance, setShowEthBalance] = useState<boolean>(true);
+    const [showUsdcBalance, setShowUsdcBalance] = useState<boolean>(true);
+    const [showUsdtBalance, setShowUsdtBalance] = useState<boolean>(true);
 
     const fetchEthBalance = async (provider: ethers.JsonRpcProvider) => {
         const rawBalance = await provider.getBalance(ETHEREUM_ADDRESS);
@@ -116,6 +133,7 @@ const Wallet = () => {
         setAddress(displayedAddress);
         setEthBalance(parsedBalance);
     };
+
     const fetchTokenBalances = async (provider: ethers.JsonRpcProvider) => {
         const usdcContract = new ethers.Contract(USDC_ADDRESS, tokenABI, provider);
         const usdtContract = new ethers.Contract(USDT_ADDRESS, tokenABI, provider);
@@ -148,6 +166,18 @@ const Wallet = () => {
         await Promise.all([balancePromise, tokenBalancesPromise, transactionsPromise]);
     };
 
+    const toggleEthBalanceVisibility = () => {
+        setShowEthBalance((prev) => !prev);
+    };
+
+    const toggleUsdcBalanceVisibility = () => {
+        setShowUsdcBalance((prev) => !prev);
+    };
+
+    const toggleUsdtBalanceVisibility = () => {
+        setShowUsdtBalance((prev) => !prev);
+    };
+
     useEffect(() => {
         fetchBalanceAndTransactions();
     }, []);
@@ -164,8 +194,15 @@ const Wallet = () => {
                     {!address ? <Loader /> : <Address>{address}</Address>}
                 </InfoWrap>
                 <InfoWrap>
-                    <Balance>ETH Balance</Balance>
-                    {!ethBalance ? <Loader /> : <Balance>{ethBalance} ETH</Balance>}
+                    <Balance>
+                        ETH Balance{' '}
+                        {showEthBalance ? (
+                            <EyeIcon className='eye-icon' onClick={toggleEthBalanceVisibility} />
+                        ) : (
+                            <EyeInvisibleIcon className='eye-icon' onClick={toggleEthBalanceVisibility} />
+                        )}
+                    </Balance>
+                    {!ethBalance ? <Loader /> : <Balance>{showEthBalance ? ethBalance : '***'}</Balance>}
                 </InfoWrap>
             </Container>
             <Title>Transactions</Title>
@@ -174,7 +211,7 @@ const Wallet = () => {
                     <TxHash>TX Hash</TxHash>
                     <Block>Block</Block>
                 </TransactionTextWrapper>
-                {transactions.length == 0 && (
+                {transactions.length == 0 ? (
                     <>
                         <TransLoadingInfoWrap>
                             <Loader />
@@ -183,30 +220,45 @@ const Wallet = () => {
                             <Loader />
                         </TransLoadingInfoWrap>
                     </>
+                ) : (
+                    transactions.map((tx, i) => (
+                        <InfoWrap key={i}>
+                            <Transaction>
+                                <HashBlockWrapper>
+                                    <Hash>{`${tx.hash.slice(0, 6)}...${tx.hash.slice(-7)}`}</Hash>
+                                    <BlockNumber>{tx.blockNumber}</BlockNumber>
+                                </HashBlockWrapper>
+                                <TransactionLine />
+                                <From>from: {tx.from}</From>
+                                <To>to: {tx.to}</To>
+                            </Transaction>
+                        </InfoWrap>
+                    ))
                 )}
-                {transactions.map((tx, i) => (
-                    <InfoWrap key={i}>
-                        <Transaction>
-                            <HashBlockWrapper>
-                                <Hash>{`${tx.hash.slice(0, 6)}...${tx.hash.slice(-7)}`}</Hash>
-                                <BlockNumber>{tx.blockNumber}</BlockNumber>
-                            </HashBlockWrapper>
-                            <TransactionLine />
-                            <From>from: {tx.from}</From>
-                            <To>to: {tx.to}</To>
-                        </Transaction>
-                    </InfoWrap>
-                ))}
             </Container>
             <Title>Token Holdings</Title>
             <Container>
                 <InfoWrap>
-                    <TokenBalance>USDC Balance</TokenBalance>
-                    {!usdcBalance ? <Loader /> : <TokenBalance>{usdcBalance} USDC</TokenBalance>}
+                    <TokenBalance>
+                        USDC Balance
+                        {showUsdcBalance ? (
+                            <EyeIcon className='eye-icon' onClick={toggleUsdcBalanceVisibility} />
+                        ) : (
+                            <EyeInvisibleIcon className='eye-icon' onClick={toggleUsdcBalanceVisibility} />
+                        )}
+                    </TokenBalance>
+                    {!usdcBalance ? <Loader /> : <TokenBalance>{showUsdcBalance ? usdcBalance : '***'}</TokenBalance>}
                 </InfoWrap>
                 <InfoWrap>
-                    <TokenBalance>USDT Balance</TokenBalance>
-                    {!usdtBalance ? <Loader /> : <TokenBalance>{usdtBalance} USDT</TokenBalance>}
+                    <TokenBalance>
+                        USDT Balance
+                        {showUsdtBalance ? (
+                            <EyeIcon className='eye-icon' onClick={toggleUsdtBalanceVisibility} />
+                        ) : (
+                            <EyeInvisibleIcon className='eye-icon' onClick={toggleUsdtBalanceVisibility} />
+                        )}
+                    </TokenBalance>
+                    {!usdtBalance ? <Loader /> : <TokenBalance>{showUsdtBalance ? usdtBalance : '***'}</TokenBalance>}
                 </InfoWrap>
             </Container>
         </div>
