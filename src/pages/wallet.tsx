@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 import { useEffect, useState } from 'react';
 import { tokenABI } from '../utils/tokenABI';
-import { ETHEREUM_ADDRESS, USDC_ADDRESS, USDT_ADDRESS, TX_HASH1, TX_HASH2 } from './constants';
+import { ETHEREUM_ADDRESS, USDC_ADDRESS, USDT_ADDRESS, TX_HASH1, TX_HASH2 } from '../utils/constants';
 import styled from 'styled-components';
 import Loader from '../components/Loader';
 
