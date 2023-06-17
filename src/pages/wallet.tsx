@@ -4,15 +4,25 @@ import { tokenABI } from '../utils/tokenABI';
 import { ETHEREUM_ADDRESS, USDC_ADDRESS, USDT_ADDRESS, TX_HASH1, TX_HASH2 } from '../utils/constants';
 import styled from 'styled-components';
 import Loader from '../components/Loader';
+import ThemeBtn from '@/components/ThemeBtn';
 
 const Container = styled.div`
     display: flex;
     flex-direction: column;
     gap: 15px;
-    margin: 0 auto 50px;
+    margin: 0 auto;
     padding: 5%;
-    background-color: rgb(241, 245, 247);
-    color: #ccc;
+    background-color: ${({ theme }) => theme.colors.background};
+    color: ${({ theme }) => theme.colors.text};
+    min-width: 500px;
+    max-width: 100%;
+    box-sizing: border-box;
+`;
+
+const FirstContainer = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 `;
 
 const InfoWrap = styled.div`
@@ -29,7 +39,7 @@ const TransLoadingInfoWrap = styled(InfoWrap)`
 `;
 
 const Title = styled.p`
-    color: #000;
+    color: ${({ theme }) => theme.colors.text};
     font-size: 28px;
     font-weight: 600;
     letter-spacing: 1px;
@@ -51,7 +61,7 @@ const TransactionTextWrapper = styled.div`
 `;
 
 const TxHash = styled.p`
-    color: black;
+    color: ${({ theme }) => theme.colors.text};
     margin: 0;
     font-size: 22px;
 `;
@@ -144,7 +154,10 @@ const Wallet = () => {
 
     return (
         <div>
-            <Title>Account Info</Title>
+            <FirstContainer>
+                <Title>Account Info</Title>
+                <ThemeBtn />
+            </FirstContainer>
             <Container>
                 <InfoWrap>
                     <Address>Account Address</Address>
